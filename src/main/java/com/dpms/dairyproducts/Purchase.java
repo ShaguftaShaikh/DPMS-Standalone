@@ -17,7 +17,7 @@ public class Purchase {
 		Scanner sc = new Scanner(System.in);
 		while(true){
 			System.out.println("1. Show Inventory");
-			System.out.println("2. Order Product(s)");
+			System.out.println("2. Place Order of Product(s)");
 			System.out.println("3. View Orders");
 			System.out.println("4. View Supplier Detail");
 			System.out.println("5. Exit");
@@ -48,10 +48,51 @@ public class Purchase {
 				}
 				break;
 			case 2:
-				showOrderedProducts();
+				
 				break;
 			case 3:
-				viewOrders();
+				System.out.println("1. Show All Orders");
+				System.out.println("2. Find Order by Order Id");
+				System.out.println("3. Find Order by Order Date");
+				System.out.println("4. Find Order by Order Retailer Id");
+				System.out.println("5. Find Order with Maximum Amount");
+				System.out.println("6. Find Order by Maximum Supplier Supplied");
+				System.out.println("7. Find Maximum Product Ordered");
+				System.out.println("8. Find Order with Minimum Amount");
+				System.out.println("9. Find Order by Minimum Supplier Supplied");
+				System.out.println("10. Find Order by Minimum Product Ordered");
+				System.out.println("11. Find Average Amount of Orders");
+				System.out.println("Enter Your Choice: ");
+				choice = sc.nextInt();
+				sc.nextLine();
+				switch (choice) {
+				case 1:
+					break;
+				case 2:
+					break;
+				case 3:
+					break;
+				case 4:
+					break;
+				case 5:
+					break;
+				case 6:
+					break;
+				case 7:
+					break;
+				case 8:
+					break;
+				case 9:
+					break;
+				case 10:
+					break;
+				case 11:
+					break;
+				case 12:
+					break;
+				default:
+					break;
+				}
 				break;
 			case 4:
 				System.out.println("1. Display All Supplier Details");
@@ -97,26 +138,13 @@ public class Purchase {
 
 	private void searchByCity(String city) {
 		// TODO Auto-generated method stub
-		String sql = "SELECT city_id, name FROM \"DPMS\".city WHERE lower(name) = ?;";
-		String cityName = "";
-		int id = 0;
+
+		String sql = "SELECT supplier_id, name, contact_number, street_no, street_name, city_name, email"+
+					" FROM \"DPMS\".supplier_info WHERE lower(city_name) = lower(?) order by (supplier_id)";
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-			preparedStatement.setString(1, city.toLowerCase());
+			preparedStatement.setString(1, city);
 			ResultSet rs = preparedStatement.executeQuery();
-			if(rs!=null){
-				while(rs.next()){
-					cityName = rs.getString("name");
-					id = rs.getInt("city_id");
-				}
-			}
-			cityName = cityName.trim();
-			sql = "SELECT s.supplier_id, s.name, s.contact_number, s.street_no, s.street_name, c.name as city_name, s.email"+
-				" FROM \"DPMS\".supplier as s, \"DPMS\".city as c WHERE s.city_id = ? AND c.city_id = s.city_id";
-			//System.out.println(sql);
-			preparedStatement = connection.prepareStatement(sql);
-			preparedStatement.setInt(1, id);
-			rs = preparedStatement.executeQuery();
 			String supplierId = "";
 			String supplierName = "";
 			String contact = "";
@@ -129,9 +157,9 @@ public class Purchase {
 					contact = rs.getString("contact_number").trim();
 					address = rs.getString("street_no").trim()+" "+rs.getString("street_name").trim();
 					email = rs.getString("email").trim();
-					cityName = rs.getString("city_name").trim();
+					city = rs.getString("city_name").trim();
 					
-					System.out.println("id: "+supplierId+" Name: "+supplierName+" contact: "+contact+" Address: "+address+" Email: "+email+" City: "+cityName);
+					System.out.println("id: "+supplierId+" Name: "+supplierName+" contact: "+contact+" Address: "+address+" Email: "+email+" City: "+city);
 					System.out.println();
 				}
 			}
@@ -143,8 +171,8 @@ public class Purchase {
 
 	private void searchByName(String sName) {
 		// TODO Auto-generated method stub
-		String sql = "SELECT s.supplier_id, s.name, s.contact_number, s.street_no, s.street_name, c.name as city_name, s.email"+
-					" FROM \"DPMS\".supplier as s,\"DPMS\".city as c WHERE lower(s.name)=? AND s.city_id = c.city_id;";
+		String sql = "SELECT supplier_id, name, contact_number, street_no, street_name, city_name, email"+
+						" FROM \"DPMS\".supplier_info WHERE lower(name) = lower(?) order by (supplier_id)";
 		
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -216,8 +244,8 @@ public class Purchase {
 
 	private void displayAllSupplierDetailes() {
 		// TODO Auto-generated method stub
-		String sql = "SELECT s.supplier_id, s.name, s.contact_number, s.street_no, s.street_name, c.name as city_name, s.email"+
-				" FROM \"DPMS\".supplier as s,\"DPMS\".city as c WHERE s.city_id = c.city_id";
+		String sql = "SELECT supplier_id, name, contact_number, street_no, street_name, city_name, email"+
+						" FROM \"DPMS\".supplier_info order by (supplier_id)";
 		
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
@@ -245,15 +273,5 @@ public class Purchase {
 			// TODO: handle exception
 			e.printStackTrace();
 		}
-	}
-
-	private void viewOrders() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private void showOrderedProducts() {
-		// TODO Auto-generated method stub
-		
 	}
 }

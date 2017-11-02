@@ -26,7 +26,26 @@ public class Sales {
 			int choice = sc.nextInt();
 			switch (choice) {
 			case 1:
-				new InventoryDaoImpl().showInventory(connection);
+				System.out.println("1. Show All Products");
+				System.out.println("2. Show Non-Available Products ");
+				System.out.println("3. Show Only Available Products");
+				System.out.println("Enter Your Choice: ");
+				choice = sc.nextInt();
+				sc.nextLine();
+				switch (choice) {
+				case 1:
+					new InventoryDaoImpl().showInventory(connection);
+					break;
+				case 2:
+					new InventoryDaoImpl().showNonAvailableProducts(connection);
+					break;
+				case 3:
+					new InventoryDaoImpl().showOnlyAvailableProducts(connection);
+					break;
+				default:
+					System.out.println("Invalid Choice");
+					break;
+				}
 				break;
 			case 2:
 				// showProducts();
@@ -44,12 +63,12 @@ public class Sales {
 				sc.nextLine();
 				switch (c) {
 				case 1:
-					// displayAllSupplierDetailes();
+					displayAllRetailerDetailes();
 					break;
 				case 2:
 					System.out.println("Enter product name: ");
 					String productName = sc.nextLine();
-					// searchByProduct(productName);
+					searchByProduct(productName);
 					break;
 				case 3:
 					System.out.println("Enter name of retailer: ");
@@ -75,6 +94,79 @@ public class Sales {
 			}
 		}
 
+	}
+
+	private void searchByProduct(String productName) {
+		// TODO Auto-generated method stub
+		String sql = "SELECT r.retailer_id, r.name, r.contact_no, c.name as city_name, r.email,r.street_no,r.street_name,"
+				+ " p.product_name as retailing_product"
+				+ " FROM \"DPMS\".retailer as r,\"DPMS\".city as c,\"DPMS\".retail_product as x,\"DPMS\".product as p"
+				+ " WHERE lower(p.product_name)=lower(?) AND c.city_id = r.city_id"
+				+ " AND r.retailer_id = x.retailer_id AND x.product_id = p.product_id" + " order by(retailer_id)";
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setString(1, productName);
+			ResultSet rs = preparedStatement.executeQuery();
+			String retailerId = "";
+			String retalierName = "";
+			String contact = "";
+			String address = "";
+			String email = "";
+			String cityName = "";
+			String retailingSupplying = "";
+			if (rs != null) {
+				while (rs.next()) {
+					retailerId = rs.getString("retailer_id").trim();
+					retalierName = rs.getString("name").trim();
+					contact = rs.getString("contact_no").trim();
+					address = rs.getString("street_no").trim() + " " + rs.getString("street_name").trim();
+					email = rs.getString("email").trim();
+					cityName = rs.getString("city_name").trim();
+					retailingSupplying = rs.getString("retailing_product").trim();
+
+					System.out.println("id: " + retailerId + " Name: " + retalierName + " Supplying Product: "
+							+ retailingSupplying + " contact: " + contact + " Address: " + address + " Email: " + email
+							+ " City: " + cityName);
+					System.out.println();
+				}
+			}
+		} catch (SQLException e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+	}
+
+	private void displayAllRetailerDetailes() {
+		// TODO Auto-generated method stub
+		String sql = "SELECT r.retailer_id, r.name, r.contact_no, r.street_no, r.street_name, c.name as city_name, r.email"+
+					" FROM \"DPMS\".retailer as r,\"DPMS\".city as c WHERE c.city_id = r.city_id order by(retailer_id)";
+		
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			ResultSet rs = preparedStatement.executeQuery();
+			String retailerId = "";
+			String retailerName = "";
+			String contact = "";
+			String address = "";
+			String email = "";
+			String cityName = "";
+			if(rs!=null){
+				while(rs.next()){
+					retailerId = rs.getString("retailer_id").trim();
+					retailerName = rs.getString("name").trim();
+					contact = rs.getString("contact_no").trim();
+					address = rs.getString("street_no").trim()+" "+rs.getString("street_name").trim();
+					email = rs.getString("email").trim();
+					cityName = rs.getString("city_name").trim();
+					
+					System.out.println("id: "+retailerId+" Name: "+retailerName+" contact: "+contact+" Address: "+address+" Email: "+email+" City: "+cityName);
+					System.out.println();
+				}
+			}
+		} catch (SQLException e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
 	}
 
 	private void searchByCity(String city) {
