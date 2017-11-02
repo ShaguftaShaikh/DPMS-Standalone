@@ -5,7 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import com.dpms.dairyproducts.Sales;
 import com.dpms.dairyproducts.dao.EmployeeDao;
 
 public class EmployeeDaoImpl implements EmployeeDao{

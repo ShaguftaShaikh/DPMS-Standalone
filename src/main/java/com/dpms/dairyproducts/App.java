@@ -22,10 +22,11 @@ public class App {
         	EmployeeDao employeeDao = new EmployeeDaoImpl();
         	String department = employeeDao.findDepartment(username, connection);
         	department = department.trim();
-        	if(department.equalsIgnoreCase("sales")){
+        	if(department.equalsIgnoreCase("purchase")){
+        		new Purchase(connection);
+        	}else if(department.equals("sales")){
         		new Sales(connection);
-        	}else if(department.equals("purchase"))
-        		new Purchase();
+        	}
         	else
         		System.out.println("No department Found");
         } else {
@@ -33,11 +34,4 @@ public class App {
         }
         sc.close();
     }
-    
-  /*  @Override
-    public boolean equals(Object obj) {
-    	// TODO Auto-generated method stub
-    	obj.
-    	return super.equals(obj);
-    }*/
 }
