@@ -69,7 +69,7 @@ public class Sales {
 				if(check){
 					saleOrder(retailer_id,product_id,quantity,price);
 				}else {
-					System.out.println("Product Nor Available");
+					System.out.println("Product Not Available");
 				}
 				break;
 			case 3:

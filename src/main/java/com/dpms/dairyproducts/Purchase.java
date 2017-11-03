@@ -52,19 +52,35 @@ public class Purchase {
 				}
 				break;
 			case 2:
+				int supplier_id = 0;
+				int product_id = 0;
+				int quantity = 0;
+				int price = 0;
 
+				System.out.println("Enter Retailer id: ");
+				supplier_id = sc.nextInt();
+				System.out.println("Enter Product id: ");
+				product_id = sc.nextInt();
+				System.out.println("Enter Quantity: ");
+				quantity = sc.nextInt();
+				System.out.println("Enter Price: ");
+				price = sc.nextInt();
+
+				boolean check = checkAvailability(product_id);
+				if (check) {
+					purchaseOrder(supplier_id, product_id, quantity, price);
+				} else {
+					System.out.println("Product has enough availibility");
+				}
 				break;
 			case 3:
 				System.out.println("1. Show All Orders");
 				System.out.println("2. Find Order by Order Id");
 				System.out.println("3. Find Order by Order Date");
-				System.out.println("4. Find Order by Order Supplier Name");
+				System.out.println("4. Find Order by Order Supplier Id");
 				System.out.println("5. Find Order with Maximum Amount");
-				System.out.println("6. Find Maximum Product Ordered");
-				System.out.println("7. Find Order with Minimum Amount");
-				System.out.println("8. Find Order by Minimum Supplier Supplied");
-				System.out.println("9. Find Order by Minimum Product Ordered");
-				System.out.println("10. Find Average Amount of Orders");
+				System.out.println("6. Find Order with Minimum Amount");
+				System.out.println("7. Find Average Amount of Orders");
 				System.out.println("Enter Your Choice: ");
 				choice = sc.nextInt();
 				sc.nextLine();
@@ -92,16 +108,10 @@ public class Purchase {
 					findOrderWithMaxAmount();
 					break;
 				case 6:
-					break;
-				case 7:
-					break;
-				case 8:
-					break;
-				case 9:
-					break;
-				case 10:
+					findOrderWithMinAmount();
 					break;
 				default:
+					System.out.println("Invalid Choice");
 					break;
 				}
 				break;
@@ -147,26 +157,125 @@ public class Purchase {
 		}
 	}
 
-	private void findOrderWithMaxAmount() {
+	private void purchaseOrder(int supplier_id, int product_id, int quantity, int price) {
 		// TODO Auto-generated method stub
-		String sql = "SELECT sales_order_id,total_price,selling_date,name from \"DPMS\".sales_order_amount_details WHERE"
-				+ " total_price = (SELECT MAX(total_price) FROM \"DPMS\".sales_order_amount_details)";
+		String sql = "INSERT INTO \"DPMS\".purchase_order(order_date, supplier_id)"+
+					" VALUES (?,?)";
+		String last = "SELECT currval('\"DPMS\".purchase_order_purchase_order_id_seq')";
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			java.util.Date date = new java.util.Date();
+			// DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+			preparedStatement.setDate(1, new Date(date.getTime()));
+			preparedStatement.setInt(2, supplier_id);
+			int update = preparedStatement.executeUpdate();
+			if (update == 1) {
+				preparedStatement = connection.prepareStatement(last);
+				ResultSet rs = preparedStatement.executeQuery();
+				int id = 0;
+				if (rs != null) {
+					while (rs.next())
+						id = rs.getInt("currval");
+				}
+				// System.out.println(id);
+				sql = "INSERT INTO \"DPMS\".purchase_product_order(product_id, purchase_order_id, quantity, price)"+
+						" VALUES (?, ?, ?, ?)";
+				preparedStatement = connection.prepareStatement(sql);
+				preparedStatement.setInt(1, id);
+				preparedStatement.setInt(2, product_id);
+				preparedStatement.setInt(3, quantity);
+				preparedStatement.setInt(4, price);
+				update = preparedStatement.executeUpdate();
+				if (update == 1)
+					System.out.println("Success");
+				System.out.println("Successfully Inserted");
+			} else
+				System.out.println("Some Error Occured");
+
+		} catch (SQLException e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+	}
+
+	private boolean checkAvailability(int product_id) {
+		// TODO Auto-generated method stub
+		String sql = "SELECT quantity FROM \"DPMS\".product_inventory WHERE product_id = ?;";
+		int q = 0;
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setInt(1, product_id);
+			ResultSet rs = preparedStatement.executeQuery();
+
+			if (rs != null) {
+				while (rs.next()) {
+					q = rs.getInt("quantity");
+				}
+			}
+			if (q < 10)
+				return true;
+			return false;
+			// System.out.println("Average Amount is: " + average);
+		} catch (SQLException e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	private void findOrderWithMinAmount() {
+		// TODO Auto-generated method stub
+		String sql = "SELECT purchase_order_id, order_date, name, total_quantity, total_price"
+				+ " FROM \"DPMS\".purchase_order_amount_details WHERE total_price = (SELECT MIN(total_price)"
+				+ " FROM \"DPMS\".purchase_order_amount_details)";
 
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			ResultSet rs = preparedStatement.executeQuery();
 			String orderId = "";
-			String sellingDate = "";
+			String purchaseDate = "";
 			String price = "";
 			String name = "";
 			if (rs != null) {
 				while (rs.next()) {
-					orderId = rs.getString("sales_order_id").trim();
-					sellingDate = rs.getString("selling_date").trim();
+					orderId = rs.getString("purchase_order_id").trim();
+					purchaseDate = rs.getString("order_date").trim();
 					price = rs.getString("total_price").trim();
 					name = rs.getString("name").trim();
 
-					System.out.println("Order id: " + orderId + " Selling date: " + sellingDate + " Price: " + price + " Name: " + name);
+					System.out.println("Order id: " + orderId + " Selling date: " + purchaseDate + " Price: " + price
+							+ " Name: " + name);
+					System.out.println();
+				}
+			}
+		} catch (SQLException e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+	}
+
+	private void findOrderWithMaxAmount() {
+		// TODO Auto-generated method stub
+		String sql = "SELECT purchase_order_id, order_date, name, total_quantity, total_price"
+				+ " FROM \"DPMS\".purchase_order_amount_details WHERE total_price = (SELECT MAX(total_price)"
+				+ " FROM \"DPMS\".purchase_order_amount_details)";
+
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			ResultSet rs = preparedStatement.executeQuery();
+			String orderId = "";
+			String purchaseDate = "";
+			String price = "";
+			String name = "";
+			if (rs != null) {
+				while (rs.next()) {
+					orderId = rs.getString("purchase_order_id").trim();
+					purchaseDate = rs.getString("order_date").trim();
+					price = rs.getString("total_price").trim();
+					name = rs.getString("name").trim();
+
+					System.out.println("Order id: " + orderId + " Selling date: " + purchaseDate + " Price: " + price
+							+ " Name: " + name);
 					System.out.println();
 				}
 			}
@@ -178,28 +287,28 @@ public class Purchase {
 
 	private void findByRetailerId(String name) {
 		// TODO Auto-generated method stub
-		String sql = "SELECT sales_order_id, selling_date, name, quantity, price, product_name"
-				+ " FROM \"DPMS\".sales_order_full_details WHERE lower(name) = lower(?)";
+		String sql = "SELECT purchase_order_id, order_date, name, quantity, price, product_name"
+				+ " FROM \"DPMS\".purchase_order_full_details WHERE lower(name) = lower(?)";
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setString(1, name);
 			ResultSet rs = preparedStatement.executeQuery();
 			String orderId = "";
-			String sellingDate = "";
+			String purchaseDate = "";
 			String quantity = "";
 			String price = "";
 			String productName = "";
 			// String name = "";
 			if (rs != null) {
 				while (rs.next()) {
-					orderId = rs.getString("sales_order_id").trim();
-					sellingDate = rs.getString("selling_date").trim();
+					orderId = rs.getString("purchase_order_id").trim();
+					purchaseDate = rs.getString("order_date").trim();
 					quantity = rs.getString("quantity").trim();
 					price = rs.getString("price").trim();
 					productName = rs.getString("product_name").trim();
 					name = rs.getString("name").trim();
 
-					System.out.println("Order id: " + orderId + " Selling date: " + sellingDate + " Product Name: "
+					System.out.println("Order id: " + orderId + " Selling date: " + purchaseDate + " Product Name: "
 							+ productName + " Quantity: " + quantity + " Price: " + price + " Name: " + name);
 					System.out.println();
 				}
@@ -212,8 +321,8 @@ public class Purchase {
 
 	private void findByOrderDate(String date) {
 		// TODO Auto-generated method stub
-		String sql = "SELECT sales_order_id, selling_date, name, quantity, price, product_name"
-				+ " FROM \"DPMS\".sales_order_full_details WHERE selling_date = ?";
+		String sql = "SELECT purchase_order_id, order_date, name, quantity, price, product_name"
+				+ " FROM \"DPMS\".purchase_order_full_details WHERE order_date = ?";
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
@@ -223,21 +332,21 @@ public class Purchase {
 
 			ResultSet rs = preparedStatement.executeQuery();
 			String orderId = "";
-			String sellingDate = "";
+			String purchaseDate = "";
 			String quantity = "";
 			String price = "";
 			String productName = "";
 			String name = "";
 			if (rs != null) {
 				while (rs.next()) {
-					orderId = rs.getString("sales_order_id").trim();
-					sellingDate = rs.getString("selling_date").trim();
+					orderId = rs.getString("purchase_order_id").trim();
+					purchaseDate = rs.getString("order_date").trim();
 					quantity = rs.getString("quantity").trim();
 					price = rs.getString("price").trim();
 					productName = rs.getString("product_name").trim();
 					name = rs.getString("name").trim();
 
-					System.out.println("Order id: " + orderId + " Selling date: " + sellingDate + " Product Name: "
+					System.out.println("Order id: " + orderId + " Selling date: " + purchaseDate + " Product Name: "
 							+ productName + " Quantity: " + quantity + " Price: " + price + " Name: " + name);
 					System.out.println();
 				}
@@ -254,28 +363,28 @@ public class Purchase {
 
 	private void findOrderById(int id) {
 		// TODO Auto-generated method stub
-		String sql = "SELECT sales_order_id, selling_date, name, quantity, price, product_name"
-				+ " FROM \"DPMS\".sales_order_full_details WHERE sales_order_id = ?";
+		String sql = "SELECT purchase_order_id, order_date, name, quantity, price, product_name"
+				+ " FROM \"DPMS\".purchase_order_full_details WHERE purchase_order_id=?";
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.setInt(1, id);
 			ResultSet rs = preparedStatement.executeQuery();
 			String orderId = "";
-			String sellingDate = "";
+			String purchaseDate = "";
 			String quantity = "";
 			String price = "";
 			String productName = "";
 			String name = "";
 			if (rs != null) {
 				while (rs.next()) {
-					orderId = rs.getString("sales_order_id").trim();
-					sellingDate = rs.getString("selling_date").trim();
+					orderId = rs.getString("purchase_order_id").trim();
+					purchaseDate = rs.getString("order_date").trim();
 					quantity = rs.getString("quantity").trim();
 					price = rs.getString("price").trim();
 					productName = rs.getString("product_name").trim();
 					name = rs.getString("name").trim();
 
-					System.out.println("Order id: " + orderId + " Selling date: " + sellingDate + " Product Name: "
+					System.out.println("Order id: " + orderId + " Selling date: " + purchaseDate + " Product Name: "
 							+ productName + " Quantity: " + quantity + " Price: " + price + " Name: " + name);
 					System.out.println();
 				}
@@ -289,27 +398,27 @@ public class Purchase {
 
 	private void showAllOrders() {
 		// TODO Auto-generated method stub
-		String sql = "SELECT sales_order_id, selling_date, name, quantity, price, product_name"
-				+ " FROM \"DPMS\".sales_order_full_details";
+		String sql = "SELECT purchase_order_id, order_date, name, quantity, price, product_name"
+				+ " FROM \"DPMS\".purchase_order_full_details";
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
 			ResultSet rs = preparedStatement.executeQuery();
 			String orderId = "";
-			String sellingDate = "";
+			String purchaseDate = "";
 			String quantity = "";
 			String price = "";
 			String productName = "";
 			String name = "";
 			if (rs != null) {
 				while (rs.next()) {
-					orderId = rs.getString("sales_order_id").trim();
-					sellingDate = rs.getString("selling_date").trim();
+					orderId = rs.getString("purchase_order_id").trim();
+					purchaseDate = rs.getString("order_date").trim();
 					quantity = rs.getString("quantity").trim();
 					price = rs.getString("price").trim();
 					productName = rs.getString("product_name").trim();
 					name = rs.getString("name").trim();
 
-					System.out.println("Order id: " + orderId + " Selling date: " + sellingDate + " Product Name: "
+					System.out.println("Order id: " + orderId + " Selling date: " + purchaseDate + " Product Name: "
 							+ productName + " Quantity: " + quantity + " Price: " + price + " Name: " + name);
 					System.out.println();
 				}
